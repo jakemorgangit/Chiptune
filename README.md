@@ -59,6 +59,7 @@ The page shows a tracker view of the song, per-channel mutes and a live oscillos
 
 ```html
 <script src="chiptune.js"></script>
+<script src="songs-adventure.js"></script> <!-- optional: the longer adventure songs -->
 <script>
   const chip = new ChipTune();
 
@@ -91,8 +92,26 @@ The page shows a tracker view of the song, per-channel mutes and a live oscillos
 | `chip.setMuted(channel, bool)` | Mutes or unmutes one music channel. |
 | `chip.onStep(fn)` | Calls `fn({ step, time, song })` for every sixteenth note, for syncing visuals. |
 
-Included songs: `overworld`, `dungeon`, `boss`.
-Included sound effects: `coin`, `jump`, `laser`, `hit`, `explosion`, `powerup`, `levelup`, `select`.
+### Song library
+
+All songs are original compositions. Loop lengths are at the written tempo.
+
+| Key | Song | Set | Style | Meter | Length |
+|---|---|---|---|---|---|
+| `overworld` | Overworld | Arcade | Upbeat platformer loop, C major | 4/4 | 8 bars · 0:13 |
+| `dungeon` | Dungeon | Arcade | Dark A minor with a delayed echo lead | 4/4 | 4 bars · 0:09 |
+| `boss` | Boss Fight | Arcade | Driving E minor at 172 BPM | 4/4 | 4 bars · 0:06 |
+| `longRoad` | The Long Road | Adventure | RPG field theme in D major, four sections building to a climax | 4/4 | 32 bars · 1:17 |
+| `villageSquare` | Village Square | Adventure | Medieval dance in D Dorian over a drone bass, with a quiet interlude | 6/8 | 32 bars · 0:40 |
+| `castleHall` | Castle Hall | Adventure | Stately G minor processional | 3/4 | 24 bars · 0:51 |
+| `ancientForest` | Ancient Forest | Adventure | Slow and atmospheric E minor: harp arpeggios, then a lead | 4/4 | 16 bars · 0:56 |
+
+The arcade songs are built into `chiptune.js`. The adventure songs live in `songs-adventure.js`,
+so a game only loads the music it uses.
+
+### Sound effects
+
+Available: `coin`, `jump`, `laser`, `hit`, `explosion`, `powerup`, `levelup`, `select`.
 
 ## Write your own song
 
@@ -109,6 +128,9 @@ const myTheme = {
 };
 chip.play(myTheme);
 ```
+
+For 3/4 or 6/8, set `barSteps: 12` on the song (and `beatSteps: 6` for 6/8) so the tracker
+counts bars correctly, and pass `12` as the last argument to `ChipTune.helpers.arp`.
 
 Channel options: `vol`, `duty` (pulse only), `sustain` (0–1 level after the attack),
 `gate` (fraction of each note that sounds) and `delay` (shift a line by N steps, handy for echoes).
