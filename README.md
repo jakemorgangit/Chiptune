@@ -1,21 +1,29 @@
+<p align="center"><img src="docs/logo.png" alt="Chiptune Cart logo" width="240"></p>
+
 # Chiptune
 
 ![No dependencies](https://img.shields.io/badge/dependencies-none-93f28a?style=flat-square)
 ![Web Audio API](https://img.shields.io/badge/built%20on-Web%20Audio%20API-5fe1e8?style=flat-square)
-![Size](https://img.shields.io/badge/size-15%20KB-ffd35c?style=flat-square)
+![Size](https://img.shields.io/badge/size-23%20KB-ffd35c?style=flat-square)
+![8-bit and 16-bit](https://img.shields.io/badge/modes-8--bit%20%7C%2016--bit-ff7aa2?style=flat-square)
 
-A tiny NES-style music and sound-effect engine for browser games. Everything is synthesised
-live with the Web Audio API: no audio files and no dependencies.
+A tiny retro music and sound-effect engine for browser games. Everything is synthesised
+live with the Web Audio API: no audio files and no dependencies. Every song plays in two
+styles, switchable live: **8-bit** like the NES, or **16-bit** like the SNES and Mega Drive.
 
-![The demo page playing the Boss Fight song](docs/demo.gif)
+![The demo page playing the Boss Fight song, switching from 8-bit to 16-bit halfway](docs/demo.gif)
 
-Four channels mirror the NES sound chip:
+Songs are written for four channels named after the NES sound chip. The mode decides how each one sounds:
 
-| Channel | Sound | Typical use |
-|---|---|---|
-| `pulse1`, `pulse2` | Square waves, 12.5 / 25 / 50 / 75% duty | Lead melody, harmony, echo |
-| `triangle` | Triangle wave | Bass |
-| `noise` | Filtered noise | Drums: `k` kick, `s` snare, `h` closed hat, `o` open hat, `c` crash |
+| Channel | 8-bit | 16-bit | Typical use |
+|---|---|---|---|
+| `pulse1` | Square wave, 12.5 / 25 / 50 / 75% duty | Two-operator FM with vibrato, panned left | Lead melody |
+| `pulse2` | Square wave | Detuned sawtooth strings, panned right | Harmony, arpeggios, echo |
+| `triangle` | Triangle wave | FM bass with a sine sub | Bass |
+| `noise` | Filtered noise drums | Fuller kit: sine kick, layered snare, crisp hats | Drums: `k` kick, `s` snare, `h` closed hat, `o` open hat, `c` crash |
+
+8-bit is dry and mono. 16-bit adds stereo placement and a SNES-style echo (a filtered feedback
+delay), and plays sound effects through a warmer filtered sawtooth.
 
 ## How it works
 
@@ -30,16 +38,19 @@ flowchart LR
     sched --> p2["Pulse 2<br/>harmony / echo"]
     sched --> tri["Triangle<br/>bass"]
     sched --> nz["Noise<br/>drums"]
-    p1 & p2 & tri & nz --> music["Music bus<br/>per-channel mute"]
+    p1 & p2 & tri & nz --> music["Music bus<br/>mute and stereo pan"]
+    p1 & p2 & tri & nz -.->|16-bit only| echo["Echo<br/>delay + low-pass"]
     fx["chip.sfx('coin')"] --> sfxbus["SFX bus"]
-    music & sfxbus --> master["Master volume"]
+    sfxbus -.-> echo
+    music & sfxbus & echo --> master["Master volume"]
     master --> scope["Analyser<br/>oscilloscope"]
     master --> out(["Speakers"])
 ```
 
 ## Demo
 
-Open `index.html` in a browser. Press **Space** to play or stop, and keys **1–8** for sound effects.
+Open `index.html` in a browser. Press **Space** to play or stop, **M** to switch between 8-bit and
+16-bit, and keys **1–8** for sound effects.
 The page shows a tracker view of the song, per-channel mutes and a live oscilloscope.
 
 ![The demo page: tracker, song picker, channel strip, oscilloscope and sound-effect pad](docs/screenshot.png)
@@ -61,6 +72,9 @@ The page shows a tracker view of the song, per-channel mutes and a live oscillos
   if (player.touches(coin)) chip.sfx('coin');
   if (boss.awake) chip.play(ChipTune.songs.boss);
   if (paused) chip.stop();
+
+  // Switch sound style at any time, even mid-song
+  chip.setMode('16bit');
 </script>
 ```
 
@@ -72,6 +86,7 @@ The page shows a tracker view of the song, per-channel mutes and a live oscillos
 | `chip.play(song)` | Plays a song on loop, replacing any song already playing. |
 | `chip.stop()` | Fades out and stops the music. |
 | `chip.sfx(name)` | Plays a sound effect over the music. |
+| `chip.setMode('8bit' \| '16bit')` | Switches the sound style. Takes effect on the next note. |
 | `chip.setVolume(0..1)` | Sets the master volume. |
 | `chip.setMuted(channel, bool)` | Mutes or unmutes one music channel. |
 | `chip.onStep(fn)` | Calls `fn({ step, time, song })` for every sixteenth note, for syncing visuals. |
@@ -97,6 +112,7 @@ chip.play(myTheme);
 
 Channel options: `vol`, `duty` (pulse only), `sustain` (0–1 level after the attack),
 `gate` (fraction of each note that sounds) and `delay` (shift a line by N steps, handy for echoes).
+`duty` only affects 8-bit mode; everything else applies to both.
 
 ## Limits
 
