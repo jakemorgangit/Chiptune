@@ -1,7 +1,13 @@
 # Chiptune
 
+![No dependencies](https://img.shields.io/badge/dependencies-none-93f28a?style=flat-square)
+![Web Audio API](https://img.shields.io/badge/built%20on-Web%20Audio%20API-5fe1e8?style=flat-square)
+![Size](https://img.shields.io/badge/size-15%20KB-ffd35c?style=flat-square)
+
 A tiny NES-style music and sound-effect engine for browser games. Everything is synthesised
 live with the Web Audio API: no audio files and no dependencies.
+
+![The demo page playing the Boss Fight song](docs/demo.gif)
 
 Four channels mirror the NES sound chip:
 
@@ -11,10 +17,32 @@ Four channels mirror the NES sound chip:
 | `triangle` | Triangle wave | Bass |
 | `noise` | Filtered noise | Drums: `k` kick, `s` snare, `h` closed hat, `o` open hat, `c` crash |
 
+## How it works
+
+Each note is a short-lived oscillator or noise burst with its own volume envelope. A look-ahead
+scheduler queues notes about 120 ms ahead of the audio clock, so timing stays tight even when the
+game's main thread is busy.
+
+```mermaid
+flowchart LR
+    song["Song text<br/>C5:2 E5:2 G5:4"] --> sched["Look-ahead<br/>scheduler"]
+    sched --> p1["Pulse 1<br/>lead"]
+    sched --> p2["Pulse 2<br/>harmony / echo"]
+    sched --> tri["Triangle<br/>bass"]
+    sched --> nz["Noise<br/>drums"]
+    p1 & p2 & tri & nz --> music["Music bus<br/>per-channel mute"]
+    fx["chip.sfx('coin')"] --> sfxbus["SFX bus"]
+    music & sfxbus --> master["Master volume"]
+    master --> scope["Analyser<br/>oscilloscope"]
+    master --> out(["Speakers"])
+```
+
 ## Demo
 
 Open `index.html` in a browser. Press **Space** to play or stop, and keys **1–8** for sound effects.
 The page shows a tracker view of the song, per-channel mutes and a live oscilloscope.
+
+![The demo page: tracker, song picker, channel strip, oscilloscope and sound-effect pad](docs/screenshot.png)
 
 ## Use it in a game
 
